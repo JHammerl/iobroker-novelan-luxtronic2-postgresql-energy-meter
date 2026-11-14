@@ -24,6 +24,30 @@ Dieses Projekt erfasst elektrische Verbräuche (kWh) und erzeugte Wärmemengen (
 
 ---
 
+## 🔄 Prozess- & Datenfluss-Übersicht
+
+```mermaid
+flowchart LR
+    subgraph WP ["1. Wärmepumpe & ioBroker"]
+        A["Novelan / Luxtronic 2.0"] -->|Zählerstände| B["0_userdata.0 States<br/>(00_create_datapoints.js)"]
+    end
+
+    subgraph LOG ["2. Datenerfassung"]
+        B -->|Echtzeit-Änderung| C["RAM-Puffer<br/>(01_data_logger.js)"]
+        C -->|Alle 5 Min. via pg.Pool| D[("PostgreSQL / TimescaleDB<br/>Tabelle: heat_pump")]
+        C -.->|Start / Stopp| M1["Alarm- & Entwarnungs-Mail"]
+    end
+
+    subgraph REP ["3. Auswertung & Export (02_geg_reports.js)"]
+        D -->|SQL-Stichtagsabfrage<br/>Tag / Woche / Monat / Jahr| E["COP- & Verbrauchs-<br/>Berechnung"]
+        E --> F["Excel-Export (.xlsx)"]
+        E --> G["PDF-Nachweis (.pdf)<br/>inkl. Jahresdiagramm"]
+        E --> H["HTML-Zusammenfassung<br/>per E-Mail (email.0)"]
+    end
+```
+
+---
+
 ## 📸 Vorschau & Auswertungsbeispiele
 
 ### 1. Automatisierter E-Mail-Versand & Monitoring
