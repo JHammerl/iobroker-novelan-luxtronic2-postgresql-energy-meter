@@ -1,6 +1,6 @@
 # ioBroker Novelan / Luxtronic – PostgreSQL Energie- und Wärmemengenzähler
 
-Dieses Projekt erfasst elektrische Verbräuche (kWh) und erzeugte Wärmemengen (kWh) einer **Novelan / Alpha Innotec (Luxtronic 2.0/2.1)** Wärmepumpe über **ioBroker**, speichert die Zählerstände ausfallsicher in einer **PostgreSQL-Datenbank** und generiert automatisierte **Verbrauchs- und Effizienznachweise (COP / JAZ)** als **Excel-Tabelle (.xlsx)**, **PDF-Dokument (.pdf)** und **HTML-E-Mail**.
+Dieses Projekt erfasst elektrische Verbräuche (kWh) und erzeugte Wärmemengen (kWh) einer **Novelan / Alpha Innotec (Luxtronic 2.0/2.1)** Wärmepumpe über **ioBroker**, speichert die Zählerstände ausfallsicher in einer **PostgreSQL- / TimescaleDB-Datenbank** und generiert automatisierte **Verbrauchs- und Effizienznachweise (COP / JAZ)** als **Excel-Tabelle (.xlsx)**, **PDF-Dokument (.pdf)** und **HTML-E-Mail**.
 
 ---
 
@@ -43,7 +43,26 @@ Dieses Projekt erfasst elektrische Verbräuche (kWh) und erzeugte Wärmemengen (
 
 ---
 
-## 🛠️ Voraussetzungen
+## 🐳 Schnellstart mit Docker (All-in-One Stack)
+
+Im Ordner [`docker/`](docker/) liegt eine fertige `docker-compose.yml`, mit der du die komplette Infrastruktur in wenigen Minuten starten kannst:
+* **ioBroker** (`buanet/iobroker`) – Port `8081` (Host-Netzwerk für Luxtronic-Erkennung)
+* **PostgreSQL 16 + TimescaleDB** (`timescale/timescaledb`) – Port `5432` (legt die Tabelle `heat_pump` beim Start automatisch an)
+* **pgAdmin 4** (`dpage/pgadmin4`) – Weboberfläche unter `http://SERVER-IP:8085`
+* **Eclipse Mosquitto MQTT** (`eclipse-mosquitto`) – Port `1883`
+
+### Stack starten
+1. Passe in der Datei [`docker/docker-compose.yml`](docker/docker-compose.yml) die Platzhalter-Passwörter (`DEIN_SICHERES_PASSWORT` und `DEIN_PGADMIN_PASSWORT`) an.
+2. Starte alle Container im Hintergrund:
+   ```bash
+   cd docker
+   docker compose up -d
+   ```
+3. Öffne ioBroker unter `http://SERVER-IP:8081` und pgAdmin unter `http://SERVER-IP:8085`.
+
+---
+
+## 🛠️ Voraussetzungen (bei manueller Installation)
 
 1. **ioBroker** mit installiertem **JavaScript-Adapter** (`javascript.0`) und **E-Mail-Adapter** (`email.0`).
 2. **Novelan / Luxtronic Adapter** (z. B. `luxtronik2` oder eigene Skripte, welche die `0_userdata.0`-Zählerstände befüllen).
@@ -55,9 +74,10 @@ Dieses Projekt erfasst elektrische Verbräuche (kWh) und erzeugte Wärmemengen (
 
 ---
 
-## 🚀 Installation & Einrichtung
+## 🚀 Installation & Einrichtung in ioBroker
 
 ### Schritt 1: PostgreSQL-Tabelle anlegen
+*(Bei Nutzung des Docker-Stacks wird dieser Schritt beim ersten Start automatisch ausgeführt.)*  
 Führe das Skript [`sql/create_table.sql`](sql/create_table.sql) in deiner PostgreSQL-Datenbank (z. B. über pgAdmin oder `psql`) aus, um die Tabelle `heat_pump` samt Zeitstempel-Index zu erstellen.
 
 ### Schritt 2: ioBroker-Datenpunkte anlegen (`scripts/00_create_datapoints.js`)
@@ -65,6 +85,7 @@ Führe das Skript [`sql/create_table.sql`](sql/create_table.sql) in deiner Postg
 2. Starte das Skript einmalig – alle benötigten `0_userdata.0`-Datenpunkte werden automatisch erstellt und das Skript beendet sich danach selbst.
 
 ### Schritt 3: Speicherordner auf dem ioBroker-Host anlegen
+*(Bei Nutzung des Docker-Stacks ist das Volume `./auswertungen:/auswertungen` bereits vorkonfiguriert.)*  
 Erstelle auf deinem ioBroker-Server die Zielverzeichnisse für Excel und PDF (mit Schreibrechten für den User `iobroker`):
 ```bash
 sudo mkdir -p /auswertungen/postgresSQL/excel /auswertungen/postgresSQL/pdf

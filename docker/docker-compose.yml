@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # 1. Smart-Home-Zentrale: ioBroker
+  iobroker:
+    image: buanet/iobroker:latest
+    container_name: iobroker
+    hostname: iobroker
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - TZ=Europe/Berlin
+      - PACKAGES=build-essential python3
+    volumes:
+      - iobroker_data:/opt/iobroker
+      - ./auswertungen:/auswertungen
+
+  # 2. Zeitreihendatenbank: PostgreSQL 16 + TimescaleDB
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: timescaledb
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Berlin
+      - POSTGRES_USER=iobroker
+      - POSTGRES_PASSWORD=DEIN_SICHERES_PASSWORT
+      - POSTGRES_DB=smarthome
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../sql/create_table.sql:/docker-entrypoint-initdb.d/01_create_table.sql
+
+  # 3. Datenbank-Verwaltung: pgAdmin 4
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Berlin
+      - PGADMIN_DEFAULT_EMAIL=admin@smarthome.local
+      - PGADMIN_DEFAULT_PASSWORD=DEIN_PGADMIN_PASSWORT
+    ports:
+      - "8085:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - timescaledb
+
+  # 4. MQTT-Broker: Eclipse Mosquitto
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+
+volumes:
+  iobroker_data:
+  postgres_data:
+  pgadmin_data:
+  mosquitto_data:
+  mosquitto_log:

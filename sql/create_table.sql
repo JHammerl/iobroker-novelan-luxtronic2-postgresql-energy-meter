@@ -18,3 +18,5 @@ CREATE TABLE IF NOT EXISTS public.heat_pump (
 
 -- Index auf den Zeitstempel für schnelle Tages-, Monats- und Jahresabfragen
 CREATE INDEX IF NOT EXISTS idx_heat_pump_timestamp ON public.heat_pump ("timestamp" DESC);
+CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
+SELECT create_hypertable('heat_pump', 'timestamp', if_not_exists => TRUE);
