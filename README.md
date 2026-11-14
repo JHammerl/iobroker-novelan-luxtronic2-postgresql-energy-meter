@@ -14,7 +14,7 @@ Dieses Projekt erfasst elektrische Verbräuche (kWh) und erzeugte Wärmemengen (
 * **Zyklische Speicherung:** Schreibt alle 5 Minuten über einen stabilen `pg.Pool` in die PostgreSQL-Tabelle `heat_pump`.
 * **Monitoring & Alarmierung:** Sendet automatisch eine **Entwarnungs-Mail** beim Skriptstart und eine **Alarm-Mail**, falls das Skript gestoppt oder neu gestartet wird.
 
-### 3. Automatisierter GEG-Verbrauchsnachweis (`scripts/02_geg_reports.js`)
+### 3. Automatisierte Verbrauchs-Übersicht  (`scripts/02_geg_reports.js`)
 * **4 Auswertungszeiträume:**
   * **Täglich (23:59 Uhr):** Rückblick der letzten 24 Stunden.
   * **Wöchentlich (Sonntag, 23:55 Uhr):** Week-to-Date Auswertung.
